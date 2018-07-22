@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans>
+
+    <bean id="playDao" class="com.guanaitong.springioc.dao.PlayDao"/>
+
+    <bean id="sleepDao" class="com.guanaitong.springioc.dao.SleepDao"/>
+
+    <bean id="userService" class="com.guanaitong.springioc.service.UserService">
+        <property name="playDao" ref="playDao"/>
+        <property name="sleepDao" ref="sleepDao"/>
+    </bean>
+
+
+</beans>
