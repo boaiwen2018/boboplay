@@ -1,117 +1,196 @@
 package com.guanaitong.util;
 
-import com.guanaitong.anno.MyAspectAnno;
-import com.guanaitong.anno.MyServiceAnno;
+import com.guanaitong.advice.Advisor;
+import com.guanaitong.advice.AfterAdvisor;
+import com.guanaitong.advice.BeforeAdvisor;
+import com.guanaitong.anno.*;
+import com.guanaitong.proxy.JdkProxyFactory;
 import org.reflections.Reflections;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 public class ContextBean {
 
-    public Map<String,Object> initBean(){
-        Map<String,Object> returnMap = new HashMap<>();
+    /**
+     * 1.读取base-package并开始扫包
+     * 2.扫描@Aspect切面注解,将切面中的切点(MyLog)与增强类型进行绑定  即能知道哪个注解需要哪些增强
+     * 3.扫描Bean注解,判断Bean中的method是否有切点(MyLog)的注解,如果有则创建代理类(代理类中传入目标Object和增强类型)
+     *
+     * @return
+     */
+    public Map<String, Object> initBean() {
+        Map<String, Object> beanMap = new HashMap<>();
+        Map<String, List<Advisor>> aspectMap = new HashMap<>();
         try {
             URL url = this.getClass().getClassLoader().getResource("applicationContext.xml");
-            //读取xml文件
             File f = new File(url.getFile());
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document doc = builder.parse(f);
 
-            //解析xml文件
-            NodeList componentScan = doc.getElementsByTagName("component-scan");
-            String scanPackage = null;
-            if(componentScan.getLength()>0){
-                org.w3c.dom.Node bean = componentScan.item(0);
-                //获取bean的属性
-                NamedNodeMap beanAttributes = bean.getAttributes();
-                //获取bean id值
-                scanPackage = beanAttributes.getNamedItem("base-package").getNodeValue();
-            }
+            //读取并解析applicationContext.xml获取扫包路径
+            String scanPackage = readXML(f);
 
-            //通过扫包路径 注册serviceBean和AspectBean
+            //通过扫包路径 获取Compoent的class
             Reflections reflections = new Reflections(scanPackage);
-            //找出包下有注解Service和aspect的class
-            Set<Class<?>> serviceClasses = reflections.getTypesAnnotatedWith(MyServiceAnno.class);
-            Set<Class<?>> aspectClasses = reflections.getTypesAnnotatedWith(MyAspectAnno.class);
 
-            for(Class clazz : serviceClasses) {
-                System.out.println("Found service: " + clazz.getName());
-                //使用clazz对应类的默认构造器创建实例
-                Object obj = clazz.newInstance();
-                returnMap.put(toLowerCaseFirstOne(clazz.getName()),obj);
-            }
+            //获取所有切面放入aspectMap中key为切点，value为具体的通知
+            generateAspectMap(reflections,aspectMap);
 
-            for(Class clazz : aspectClasses) {
-                System.out.println("Found aspect: " + clazz.getName());
-            }
+            //初始化容器，将bean放入容器中
+            //判断Bean中的method是否有切点(MyLog)的注解,如果有则创建代理类(代理类中传入目标对象和增强类型)
+            initContext(reflections,aspectMap,beanMap);
 
-
-
-            //获取property标签
-//            NodeList properties = doc.getElementsByTagName("property");
-//            for(int i = 0; i < properties.getLength(); i++){
-//                //获取property节点
-//                org.w3c.dom.Node property = properties.item(i);
-//                org.w3c.dom.Node parentNode = property.getParentNode();
-//                //获取property的属性
-//                NamedNodeMap beanAttributes = property.getAttributes();
-//                //获取property name值
-//                String beanName = beanAttributes.getNamedItem("name").getNodeValue();
-//                //获取property class值
-//                String beanRef = beanAttributes.getNamedItem("ref").getNodeValue();
-//                //获取父亲节点bean id
-//                String parentId = parentNode.getAttributes().getNamedItem("id").getNodeValue();
-//                //通过id获取被注入对象
-//                Object obj = returnMap.get(parentId);
-//                //通过id获取注入对象
-//                Object obj2 = returnMap.get(beanRef);
-//                //将依赖对象注入
-//                Method[] method = obj.getClass().getDeclaredMethods();
-//                for (int n = 0; n < method.length; n++) {
-//                    String name = method[n].getName();
-//                    String temp = null;
-//                    if (name.startsWith("set")) {
-//                        temp = toLowerCaseFirstOne(name.substring(3, name.length()));
-//                        if (obj2 != null) {
-//                            if (temp.equals(beanRef)) {
-//                                method[n].invoke(obj, obj2);
-//                                returnMap.put(parentId,obj);
-//                            }
-//                        }
-//                    }
-//                }
-//            }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return returnMap;
+        return beanMap;
+    }
+
+
+    /**
+     * 初始化容器
+     * @param reflections
+     * @param aspectMap
+     * @param beanMap
+     * @throws IllegalAccessException
+     * @throws InstantiationException
+     */
+    private void initContext(Reflections reflections, Map<String, List<Advisor>> aspectMap, Map<String, Object> beanMap) throws IllegalAccessException, InstantiationException {
+        //找出包下有注解Service
+        Set<Class<?>> serviceClasses = reflections.getTypesAnnotatedWith(MyServiceAnno.class);
+        //定义哪些方法需要哪些通知
+        Map<String,List<Advisor>> methodAdvisorMap = new HashMap<>();
+        //为有切面注解的方法的类生成代理类 并为代理类的方法进行增强
+        for (Class clazz : serviceClasses) {
+            boolean proxyFlag = false;
+            //Bean的方法
+            Method[] methods = clazz.getDeclaredMethods();
+            for (Method method : methods) {
+                //获取方法上的注解
+                Annotation[] annotations = method.getDeclaredAnnotations();
+                //判断方法上的注解是不是有切面的注解 如果有就生成代理类
+                for (Annotation annotation : annotations) {
+                    if(aspectMap.containsKey(annotation.annotationType().getName())){
+                        methodAdvisorMap.put(method.getName(),aspectMap.get(annotation.annotationType().getName()));
+                        proxyFlag = true;
+                    }
+                }
+            }
+
+            Object obj = clazz.newInstance();
+            if(proxyFlag) {
+                obj = new JdkProxyFactory().createProxyInstance(obj, methodAdvisorMap);
+            }
+
+            Class beanClass = null;
+            if(clazz.getInterfaces()!=null &&clazz.getInterfaces().length>0){
+                beanClass = clazz.getInterfaces()[0];
+            }else{
+                beanClass = clazz;
+            }
+            beanMap.put(toLowerCaseFirstOne(beanClass.getName().substring(beanClass.getName().lastIndexOf(".")+1)), obj);
+        }
+    }
+
+    /**
+     * 创建切点与通知的关系
+     * @param reflections
+     * @param aspectMap
+     */
+    private void generateAspectMap(Reflections reflections,Map<String,List<Advisor>> aspectMap) throws IllegalAccessException, InstantiationException {
+        //获取所有切面
+        Set<Class<?>> aspectClasses = reflections.getTypesAnnotatedWith(MyAspectAnno.class);
+        String pointcutMethodName = null;
+        List<Advisor> advisorList = new ArrayList<>();
+        Map<String, String> annoMethodMap = new HashMap<>();
+        //获取切点和增强模式 切点key为 anno的名字value为增强集合
+        for (Class clazz : aspectClasses) {
+            Method[] methods = clazz.getDeclaredMethods();
+
+            for (Method method : methods) {
+                //如果是MyPointcutAnno切点注解
+                if (method.isAnnotationPresent(MyPointcutAnno.class)) {
+                    MyPointcutAnno myAnnotation = method.getAnnotation(MyPointcutAnno.class);
+                    String aspectAnno = myAnnotation.value().replace("@annotation(","").replace(")","");
+                    pointcutMethodName = method.getName();
+                    aspectMap.put(aspectAnno, advisorList);
+                    annoMethodMap.put(pointcutMethodName, aspectAnno);
+                }
+            }
+
+            for(Method method : methods){
+
+                if (method.isAnnotationPresent(MyBefore.class)) {
+                    MyBefore myAnnotation = method.getAnnotation(MyBefore.class);
+                    String value = myAnnotation.value();
+                    if (value.replace("()","").equals(pointcutMethodName)) {
+                        String aspectAnno = annoMethodMap.get(value.replace("()",""));
+                        List<Advisor> advisors = aspectMap.get(aspectAnno);
+                        advisors.add(new BeforeAdvisor(clazz.newInstance(), method));
+                        aspectMap.put(aspectAnno, advisorList);
+                    }
+                }
+
+                if (method.isAnnotationPresent(MyAfter.class)) {
+                    MyAfter myAnnotation = method.getAnnotation(MyAfter.class);
+                    String value = myAnnotation.value();
+                    if (value.equals(pointcutMethodName+"()")) {
+                        String aspectAnno = annoMethodMap.get(value.replace("()",""));
+                        List<Advisor> advisors = aspectMap.get(aspectAnno);
+                        advisors.add(new AfterAdvisor(clazz.newInstance(), method));
+                        aspectMap.put(aspectAnno, advisorList);
+                    }
+                }
+            }
+            System.out.println("aspectMap="+aspectMap);
+        }
+    }
+
+
+    private String readXML(File f) throws IOException, SAXException, ParserConfigurationException {
+        //读取xml文件
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document doc = builder.parse(f);
+
+        //解析xml文件
+        NodeList componentScan = doc.getElementsByTagName("component-scan");
+        String scanPackage = null;
+        if (componentScan.getLength() > 0) {
+            org.w3c.dom.Node bean = componentScan.item(0);
+            //获取bean的属性
+            NamedNodeMap beanAttributes = bean.getAttributes();
+            //获取bean id值
+            scanPackage = beanAttributes.getNamedItem("base-package").getNodeValue();
+        }
+        return scanPackage;
     }
 
 
     /**
      * 首字母转小写
+     *
      * @param s
      * @return
      */
-    public static String toLowerCaseFirstOne(String s){
-        if(Character.isLowerCase(s.charAt(0)))
+    public static String toLowerCaseFirstOne(String s) {
+        if (Character.isLowerCase(s.charAt(0))) {
             return s;
-        else
+        } else {
             return (new StringBuilder()).append(Character.toLowerCase(s.charAt(0))).append(s.substring(1)).toString();
-    }
+        }
 
+    }
 
 }
