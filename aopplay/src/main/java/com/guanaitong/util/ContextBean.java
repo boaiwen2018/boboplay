@@ -2,6 +2,7 @@ package com.guanaitong.util;
 
 import com.guanaitong.advice.Advisor;
 import com.guanaitong.advice.AfterAdvisor;
+import com.guanaitong.advice.AroundAdvisor;
 import com.guanaitong.advice.BeforeAdvisor;
 import com.guanaitong.anno.*;
 import com.guanaitong.proxy.JdkProxyFactory;
@@ -149,6 +150,18 @@ public class ContextBean {
                         String aspectAnno = annoMethodMap.get(value.replace("()",""));
                         List<Advisor> advisors = aspectMap.get(aspectAnno);
                         advisors.add(new AfterAdvisor(clazz.newInstance(), method));
+                        aspectMap.put(aspectAnno, advisorList);
+                    }
+                }
+
+
+                if (method.isAnnotationPresent(MyAround.class)) {
+                    MyAround myAnnotation = method.getAnnotation(MyAround.class);
+                    String value = myAnnotation.value();
+                    if (value.equals(pointcutMethodName+"()")) {
+                        String aspectAnno = annoMethodMap.get(value.replace("()",""));
+                        List<Advisor> advisors = aspectMap.get(aspectAnno);
+                        advisors.add(new AroundAdvisor(clazz.newInstance(), method));
                         aspectMap.put(aspectAnno, advisorList);
                     }
                 }
