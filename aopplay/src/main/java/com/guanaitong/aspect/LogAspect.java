@@ -62,13 +62,13 @@ public class LogAspect {
      * @throws Throwable
      */
 //    @MyAround("pointcut()")
-    public Object around(Object orginalObj, Method orginalMethod) throws Throwable {
-        //环绕通知处理方法
-        System.out.println("My AOP Around Start");
-        Object obj =  orginalMethod.invoke(orginalObj);
-        System.out.println("My AOP Around End");
-        return obj;
-    }
+//    public Object around(Object orginalObj, Method orginalMethod) throws Throwable {
+//        //环绕通知处理方法
+//        System.out.println("My AOP Around Start");
+//        Object obj =  orginalMethod.invoke(orginalObj);
+//        System.out.println("My AOP Around End");
+//        return obj;
+//    }
 
 
 
