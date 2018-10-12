@@ -102,7 +102,7 @@ public class ContextBean {
 
             Object obj = clazz.newInstance();
             if(proxyFlag) {
-                //该类中哪些方法需要增强，增强类型有哪几种
+                //告知代理类哪些方法需要增强，增强类型有哪几种
                 obj = new JdkProxyFactory().createProxyInstance(obj, methodAdvisorMap);
             }
 
@@ -114,7 +114,8 @@ public class ContextBean {
             }
             beanMap.put(toLowerCaseFirstOne(beanClass.getName().substring(beanClass.getName().lastIndexOf(".")+1)), obj);
         }
-        System.out.println("beanContext:"+JSON.toJSONString(beanMap));
+        System.out.println("\nbeanContext:");
+        printMap(beanMap);
     }
 
     /**
@@ -234,7 +235,17 @@ public class ContextBean {
         } else {
             return (new StringBuilder()).append(Character.toLowerCase(s.charAt(0))).append(s.substring(1)).toString();
         }
+    }
 
+
+    private static void printMap(Map<String, Object> map) {
+
+        Iterator<Map.Entry<String, Object>> it = map.entrySet().iterator();
+        while(it.hasNext()){
+            Map.Entry<String, Object> next = it.next();
+            System.out.println(next.getKey()+",obj class:"+ next.getValue().getClass());
+        }
+        System.out.println("\n");
     }
 
 }
