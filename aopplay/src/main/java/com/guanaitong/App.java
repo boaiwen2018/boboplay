@@ -1,6 +1,7 @@
 package com.guanaitong;
 
 import com.guanaitong.service.PlayService;
+import com.guanaitong.service.SleepService;
 import com.guanaitong.util.ContextBean;
 
 import java.util.Map;
@@ -15,6 +16,12 @@ public class App
     {
         Map<String,Object> beanMap = new ContextBean().initBean();
         PlayService playService = (PlayService) beanMap.get("playService");
+        SleepService sleepService = (SleepService) beanMap.get("sleepService");
+
         playService.play();
+        System.out.println("-----------华丽的分割线-------------");
+        playService.play2();
+        System.out.println("-----------华丽的分割线-------------");
+        sleepService.sleep();
     }
 }

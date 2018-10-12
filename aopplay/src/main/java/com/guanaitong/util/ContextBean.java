@@ -67,10 +67,12 @@ public class ContextBean {
     private void initContext(Reflections reflections, Map<String, Advisors> aspectMap, Map<String, Object> beanMap) throws IllegalAccessException, InstantiationException {
         //找出包下有注解Service
         Set<Class<?>> serviceClasses = reflections.getTypesAnnotatedWith(MyServiceAnno.class);
-        //定义哪些方法需要哪些通知
-        Map<String,Advisors> methodAdvisorMap = new HashMap<>();
+
         //为有切面注解的方法的类生成代理类 并为代理类的方法进行增强
         for (Class clazz : serviceClasses) {
+            //定义哪些方法需要哪些通知
+            Map<String,Advisors> methodAdvisorMap = new HashMap<>();
+
             boolean proxyFlag = false;
             //Bean的方法
             Method[] methods = clazz.getDeclaredMethods();
@@ -109,14 +111,12 @@ public class ContextBean {
     private void generateAspectMap(Reflections reflections,Map<String,Advisors> aspectMap) throws IllegalAccessException, InstantiationException {
         //获取所有切面
         Set<Class<?>> aspectClasses = reflections.getTypesAnnotatedWith(MyAspectAnno.class);
-        String pointcutMethodName = null;
 
-        Advisors advisors = new Advisors();
-
-
-        Map<String, String> annoMethodMap = new HashMap<>();
         //获取切点和增强模式 切点key为 anno的名字value为增强集合
         for (Class clazz : aspectClasses) {
+            String pointcutMethodName = null;
+            Advisors advisors = new Advisors();
+            Map<String, String> annoMethodMap = new HashMap<>();
             Method[] methods = clazz.getDeclaredMethods();
 
             for (Method method : methods) {
@@ -183,8 +183,8 @@ public class ContextBean {
                     }
                 }
             }
-            System.out.println("aspectMap="+aspectMap);
         }
+        System.out.println("aspectMap="+aspectMap);
     }
 
 

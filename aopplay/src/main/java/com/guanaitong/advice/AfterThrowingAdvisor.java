@@ -6,8 +6,6 @@ import java.lang.reflect.Method;
 
 public class AfterThrowingAdvisor extends Advisor{
 
-    protected Integer order = 3;
-
     public AfterThrowingAdvisor(Object aopObj, Method aopMethod) {
         super(aopObj, aopMethod);
     }

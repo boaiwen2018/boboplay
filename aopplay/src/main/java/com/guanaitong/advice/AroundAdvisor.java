@@ -5,8 +5,6 @@ import java.lang.reflect.Method;
 
 public class AroundAdvisor extends Advisor {
 
-    protected Integer order = 2;
-
     public AroundAdvisor(Object aopObj, Method aopMethod) {
         super(aopObj, aopMethod);
     }
