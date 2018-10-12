@@ -1,5 +1,6 @@
 package com.guanaitong.util;
 
+import com.alibaba.fastjson.JSON;
 import com.guanaitong.advice.*;
 import com.guanaitong.anno.*;
 import com.guanaitong.proxy.JdkProxyFactory;
@@ -20,7 +21,18 @@ import java.net.URL;
 import java.util.*;
 
 
+/**
+ * 单例
+ */
 public class ContextBean {
+
+    private ContextBean() {}
+    private static class InstanceHolder {
+        private static final ContextBean INSTANCE = new ContextBean();
+    }
+    public static ContextBean getInstance() {
+        return InstanceHolder.INSTANCE;
+    }
 
     /**
      * 1.读取base-package并开始扫包
@@ -90,6 +102,7 @@ public class ContextBean {
 
             Object obj = clazz.newInstance();
             if(proxyFlag) {
+                //该类中哪些方法需要增强，增强类型有哪几种
                 obj = new JdkProxyFactory().createProxyInstance(obj, methodAdvisorMap);
             }
 
@@ -101,6 +114,7 @@ public class ContextBean {
             }
             beanMap.put(toLowerCaseFirstOne(beanClass.getName().substring(beanClass.getName().lastIndexOf(".")+1)), obj);
         }
+        System.out.println("beanContext:"+JSON.toJSONString(beanMap));
     }
 
     /**
@@ -184,7 +198,7 @@ public class ContextBean {
                 }
             }
         }
-        System.out.println("aspectMap="+aspectMap);
+        System.out.println("aspectMap="+ JSON.toJSONString(aspectMap));
     }
 
 

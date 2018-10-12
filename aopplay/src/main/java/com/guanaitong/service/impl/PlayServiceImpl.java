@@ -17,12 +17,13 @@ public class PlayServiceImpl implements PlayService {
 
     @MyLog
     @Override
-    public void play2() {
+    public String play2() {
         System.out.println("play2......");
         if(true){
             System.out.println("报错啦......");
             throw new RuntimeException("报错啦～");
         }
+        return "play return";
     }
 
 }

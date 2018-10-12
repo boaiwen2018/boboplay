@@ -14,7 +14,9 @@ public class App
 {
     public static void main( String[] args )
     {
-        Map<String,Object> beanMap = new ContextBean().initBean();
+        Map<String,Object> beanMap = ContextBean.getInstance().initBean();
+
+        //从容器中获取bean
         PlayService playService = (PlayService) beanMap.get("playService");
         SleepService sleepService = (SleepService) beanMap.get("sleepService");
 

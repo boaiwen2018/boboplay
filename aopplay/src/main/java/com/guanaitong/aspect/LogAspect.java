@@ -1,8 +1,6 @@
 package com.guanaitong.aspect;
 
 import com.guanaitong.anno.*;
-import org.aopalliance.intercept.MethodInvocation;
-
 import java.lang.reflect.Method;
 
 
@@ -40,7 +38,7 @@ public class LogAspect {
     @MyAfterReturn("pointcut()")
     public void afterReturn(Object result) {
         //环绕通知处理方法
-        System.out.println("My AOP AfterReturn Advice,result="+result);
+        System.out.println("My AOP AfterReturn Advice,result: "+result);
     }
 
 
@@ -52,7 +50,7 @@ public class LogAspect {
     @MyAfterThrowing("pointcut()")
     public void afterThrowing(Throwable e) throws Throwable {
         //环绕通知处理方法
-        System.out.println("My AOP afterThrowing:"+e.getMessage());
+        System.out.println("My AOP afterThrowing Advice,Exception Message: "+e.getMessage());
     }
 
 

@@ -12,8 +12,7 @@ public class LogAspect2 {
      * MyLog2注解作为切点
      */
     @MyPointcutAnno("@annotation(com.guanaitong.anno.MyLog2)")
-    public void pointcut() {
-    }
+    public void pointcut() {}
 
     /**
      * 环绕通知
