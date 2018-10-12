@@ -4,9 +4,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 
-public class AfterThrowingAdvisor extends Advisor{
+public class AfterThrowingAdvice extends Advice{
 
-    public AfterThrowingAdvisor(Object aopObj, Method aopMethod) {
+    public AfterThrowingAdvice(Object aopObj, Method aopMethod) {
         super(aopObj, aopMethod);
     }
 

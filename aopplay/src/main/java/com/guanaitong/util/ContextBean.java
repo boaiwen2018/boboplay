@@ -43,7 +43,7 @@ public class ContextBean {
      */
     public Map<String, Object> initBean() {
         Map<String, Object> beanMap = new HashMap<>();
-        Map<String, Advisors> aspectMap = new HashMap<>();
+        Map<String, Advices> aspectMap = new HashMap<>();
         try {
             URL url = this.getClass().getClassLoader().getResource("applicationContext.xml");
             File f = new File(url.getFile());
@@ -76,14 +76,14 @@ public class ContextBean {
      * @throws IllegalAccessException
      * @throws InstantiationException
      */
-    private void initContext(Reflections reflections, Map<String, Advisors> aspectMap, Map<String, Object> beanMap) throws IllegalAccessException, InstantiationException {
+    private void initContext(Reflections reflections, Map<String, Advices> aspectMap, Map<String, Object> beanMap) throws IllegalAccessException, InstantiationException {
         //找出包下有注解Service
         Set<Class<?>> serviceClasses = reflections.getTypesAnnotatedWith(MyServiceAnno.class);
 
         //为有切面注解的方法的类生成代理类 并为代理类的方法进行增强
         for (Class clazz : serviceClasses) {
             //定义哪些方法需要哪些通知
-            Map<String,Advisors> methodAdvisorMap = new HashMap<>();
+            Map<String,Advices> methodAdviceMap = new HashMap<>();
 
             boolean proxyFlag = false;
             //Bean的方法
@@ -94,7 +94,7 @@ public class ContextBean {
                 //判断方法上的注解是不是有切面的注解 如果有就生成代理类
                 for (Annotation annotation : annotations) {
                     if(aspectMap.containsKey(annotation.annotationType().getName())){
-                        methodAdvisorMap.put(method.getName(),aspectMap.get(annotation.annotationType().getName()));
+                        methodAdviceMap.put(method.getName(),aspectMap.get(annotation.annotationType().getName()));
                         proxyFlag = true;
                     }
                 }
@@ -103,7 +103,7 @@ public class ContextBean {
             Object obj = clazz.newInstance();
             if(proxyFlag) {
                 //告知代理类哪些方法需要增强，增强类型有哪几种
-                obj = new JdkProxyFactory().createProxyInstance(obj, methodAdvisorMap);
+                obj = new JdkProxyFactory().createProxyInstance(obj, methodAdviceMap);
             }
 
             Class beanClass = null;
@@ -123,14 +123,14 @@ public class ContextBean {
      * @param reflections
      * @param aspectMap
      */
-    private void generateAspectMap(Reflections reflections,Map<String,Advisors> aspectMap) throws IllegalAccessException, InstantiationException {
+    private void generateAspectMap(Reflections reflections,Map<String,Advices> aspectMap) throws IllegalAccessException, InstantiationException {
         //获取所有切面
         Set<Class<?>> aspectClasses = reflections.getTypesAnnotatedWith(MyAspectAnno.class);
 
         //获取切点和增强模式 切点key为 anno的名字value为增强集合
         for (Class clazz : aspectClasses) {
             String pointcutMethodName = null;
-            Advisors advisors = new Advisors();
+            Advices advices = new Advices();
             Map<String, String> annoMethodMap = new HashMap<>();
             Method[] methods = clazz.getDeclaredMethods();
 
@@ -140,7 +140,7 @@ public class ContextBean {
                     MyPointcutAnno myAnnotation = method.getAnnotation(MyPointcutAnno.class);
                     String aspectAnno = myAnnotation.value().replace("@annotation(","").replace(")","");
                     pointcutMethodName = method.getName();
-                    aspectMap.put(aspectAnno, advisors);
+                    aspectMap.put(aspectAnno, advices);
                     annoMethodMap.put(pointcutMethodName, aspectAnno);
                 }
             }
@@ -152,8 +152,8 @@ public class ContextBean {
                     String value = myAnnotation.value();
                     if (value.replace("()","").equals(pointcutMethodName)) {
                         String aspectAnno = annoMethodMap.get(value.replace("()",""));
-                        advisors.setBeforeAdvisor(new BeforeAdvisor(clazz.newInstance(), method));
-                        aspectMap.put(aspectAnno, advisors);
+                        advices.setBeforeAdvice(new BeforeAdvice(clazz.newInstance(), method));
+                        aspectMap.put(aspectAnno, advices);
                     }
                 }
 
@@ -162,8 +162,8 @@ public class ContextBean {
                     String value = myAnnotation.value();
                     if (value.equals(pointcutMethodName+"()")) {
                         String aspectAnno = annoMethodMap.get(value.replace("()",""));
-                        advisors.setAfterAdvisor(new AfterAdvisor(clazz.newInstance(), method));
-                        aspectMap.put(aspectAnno, advisors);
+                        advices.setAfterAdvice(new AfterAdvice(clazz.newInstance(), method));
+                        aspectMap.put(aspectAnno, advices);
                     }
                 }
 
@@ -173,8 +173,8 @@ public class ContextBean {
                     String value = myAnnotation.value();
                     if (value.equals(pointcutMethodName+"()")) {
                         String aspectAnno = annoMethodMap.get(value.replace("()",""));
-                        advisors.setAroundAdvisor(new AroundAdvisor(clazz.newInstance(), method));
-                        aspectMap.put(aspectAnno, advisors);
+                        advices.setAroundAdvice(new AroundAdvice(clazz.newInstance(), method));
+                        aspectMap.put(aspectAnno, advices);
                     }
                 }
 
@@ -183,8 +183,8 @@ public class ContextBean {
                     String value = myAnnotation.value();
                     if (value.equals(pointcutMethodName+"()")) {
                         String aspectAnno = annoMethodMap.get(value.replace("()",""));
-                        advisors.setAfterReturnAdvisor(new AfterReturnAdvisor(clazz.newInstance(), method));
-                        aspectMap.put(aspectAnno, advisors);
+                        advices.setAfterReturnAdvice(new AfterReturnAdvice(clazz.newInstance(), method));
+                        aspectMap.put(aspectAnno, advices);
                     }
                 }
 
@@ -193,8 +193,8 @@ public class ContextBean {
                     String value = myAnnotation.value();
                     if (value.equals(pointcutMethodName+"()")) {
                         String aspectAnno = annoMethodMap.get(value.replace("()",""));
-                        advisors.setAfterThrowingAdvisor(new AfterThrowingAdvisor(clazz.newInstance(), method));
-                        aspectMap.put(aspectAnno, advisors);
+                        advices.setAfterThrowingAdvice(new AfterThrowingAdvice(clazz.newInstance(), method));
+                        aspectMap.put(aspectAnno, advices);
                     }
                 }
             }

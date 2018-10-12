@@ -3,9 +3,9 @@ package com.guanaitong.advice;
 import java.lang.reflect.Method;
 
 
-public class AroundAdvisor extends Advisor {
+public class AroundAdvice extends Advice {
 
-    public AroundAdvisor(Object aopObj, Method aopMethod) {
+    public AroundAdvice(Object aopObj, Method aopMethod) {
         super(aopObj, aopMethod);
     }
 

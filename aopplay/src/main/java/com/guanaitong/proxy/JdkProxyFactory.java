@@ -11,17 +11,17 @@ import java.util.Map;
 /**
  * JDK代理工厂类
  */
-public class JdkProxyFactory extends AdvisorExecute implements InvocationHandler {
+public class JdkProxyFactory extends AdviceExecute implements InvocationHandler {
 
     private Object targetObject;
-    private Map<String, Advisors> methodAdvisors;
+    private Map<String, Advices> methodAdvices;
 
     public JdkProxyFactory() {
     }
 
-    public Object createProxyInstance(Object targetObject, Map<String, Advisors> methodAdvisors) {
+    public Object createProxyInstance(Object targetObject, Map<String, Advices> methodAdvices) {
         this.targetObject = targetObject;
-        this.methodAdvisors = methodAdvisors;
+        this.methodAdvices = methodAdvices;
         return Proxy.newProxyInstance(
                 //类加载器
                 targetObject.getClass().getClassLoader(),
@@ -34,31 +34,31 @@ public class JdkProxyFactory extends AdvisorExecute implements InvocationHandler
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        Advisors advisors = getAdvisors(methodAdvisors, method);
+        Advices advices = getAdvices(methodAdvices, method);
         Object result = null;
         //before前置通知
-        before(advisors);
+        before(advices);
         try {
             //around环绕通知
-            if (!around(advisors, targetObject, method)) {
+            if (!around(advices, targetObject, method)) {
                 result = method.invoke(targetObject, args);
             }
             //afterReturn返回通知
-            afterReturn(advisors, result);
+            afterReturn(advices, result);
         } catch (Exception e) {
             //afterThrowing异常通知
-            afterThrowing(advisors, e);
+            afterThrowing(advices, e);
         } finally {
             //after后置通知
-            after(advisors);
+            after(advices);
         }
         return result;
     }
 
-    private Advisors getAdvisors(Map<String, Advisors> methodAdvisors, Method method) {
+    private Advices getAdvices(Map<String, Advices> methodAdvices, Method method) {
         //判断方法是否需要增强
-        if (methodAdvisors.containsKey(method.getName())) {
-            return methodAdvisors.get(method.getName());
+        if (methodAdvices.containsKey(method.getName())) {
+            return methodAdvices.get(method.getName());
         }
         return null;
     }

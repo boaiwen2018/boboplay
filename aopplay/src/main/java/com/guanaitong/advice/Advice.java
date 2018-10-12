@@ -2,7 +2,7 @@ package com.guanaitong.advice;
 
 import java.lang.reflect.Method;
 
-public abstract class Advisor {
+public abstract class Advice {
 
     protected Object aopObj;
     protected Method aopMethod;
@@ -23,7 +23,7 @@ public abstract class Advisor {
         this.aopMethod = aopMethod;
     }
 
-    public Advisor(Object aopObj, Method aopMethod){
+    public Advice(Object aopObj, Method aopMethod){
         this.aopObj = aopObj;
         this.aopMethod = aopMethod;
     }

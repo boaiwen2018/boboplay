@@ -3,9 +3,10 @@ package com.guanaitong.advice;
 import java.lang.reflect.Method;
 
 
-public class AfterAdvisor extends Advisor {
+public class BeforeAdvice extends Advice{
 
-    public AfterAdvisor(Object aopObj, Method aopMethod) {
+    public BeforeAdvice(Object aopObj, Method aopMethod) {
         super(aopObj, aopMethod);
     }
+
 }
