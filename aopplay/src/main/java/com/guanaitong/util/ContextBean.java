@@ -35,9 +35,9 @@ public class ContextBean {
     }
 
     /**
-     * 1.读取base-package并开始扫包
+     * 1.读取applicationContext.xml中的base-package并开始扫包
      * 2.扫描@Aspect切面注解,将切面中的切点(MyLog)与增强类型进行绑定  即能知道哪个注解需要哪些增强
-     * 3.扫描Bean注解,判断Bean中的method是否有切点(MyLog)的注解,如果有则创建代理类(代理类中传入目标Object和增强类型)
+     * 3.扫描Bean注解,判断Bean中的method是否有切点(MyLog)的注解,如果有则创建代理类(代理类中传入目标对象和通知对象)
      *
      * @return
      */
