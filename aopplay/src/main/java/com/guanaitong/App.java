@@ -22,6 +22,7 @@ public class App
         SleepService sleepService = (SleepService) beanMap.get("sleepService");
         EatService eatService = (EatService) beanMap.get("eatService");
 
+        System.out.println("-----------华丽的分割线-------------");
         playService.play();
         System.out.println("-----------华丽的分割线-------------");
         playService.play2();
