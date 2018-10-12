@@ -1,9 +1,6 @@
 package com.guanaitong.util;
 
-import com.guanaitong.advice.Advisor;
-import com.guanaitong.advice.AfterAdvisor;
-import com.guanaitong.advice.AroundAdvisor;
-import com.guanaitong.advice.BeforeAdvisor;
+import com.guanaitong.advice.*;
 import com.guanaitong.anno.*;
 import com.guanaitong.proxy.JdkProxyFactory;
 import org.reflections.Reflections;
@@ -34,7 +31,7 @@ public class ContextBean {
      */
     public Map<String, Object> initBean() {
         Map<String, Object> beanMap = new HashMap<>();
-        Map<String, List<Advisor>> aspectMap = new HashMap<>();
+        Map<String, Advisors> aspectMap = new HashMap<>();
         try {
             URL url = this.getClass().getClassLoader().getResource("applicationContext.xml");
             File f = new File(url.getFile());
@@ -67,11 +64,11 @@ public class ContextBean {
      * @throws IllegalAccessException
      * @throws InstantiationException
      */
-    private void initContext(Reflections reflections, Map<String, List<Advisor>> aspectMap, Map<String, Object> beanMap) throws IllegalAccessException, InstantiationException {
+    private void initContext(Reflections reflections, Map<String, Advisors> aspectMap, Map<String, Object> beanMap) throws IllegalAccessException, InstantiationException {
         //找出包下有注解Service
         Set<Class<?>> serviceClasses = reflections.getTypesAnnotatedWith(MyServiceAnno.class);
         //定义哪些方法需要哪些通知
-        Map<String,List<Advisor>> methodAdvisorMap = new HashMap<>();
+        Map<String,Advisors> methodAdvisorMap = new HashMap<>();
         //为有切面注解的方法的类生成代理类 并为代理类的方法进行增强
         for (Class clazz : serviceClasses) {
             boolean proxyFlag = false;
@@ -109,11 +106,14 @@ public class ContextBean {
      * @param reflections
      * @param aspectMap
      */
-    private void generateAspectMap(Reflections reflections,Map<String,List<Advisor>> aspectMap) throws IllegalAccessException, InstantiationException {
+    private void generateAspectMap(Reflections reflections,Map<String,Advisors> aspectMap) throws IllegalAccessException, InstantiationException {
         //获取所有切面
         Set<Class<?>> aspectClasses = reflections.getTypesAnnotatedWith(MyAspectAnno.class);
         String pointcutMethodName = null;
-        List<Advisor> advisorList = new ArrayList<>();
+
+        Advisors advisors = new Advisors();
+
+
         Map<String, String> annoMethodMap = new HashMap<>();
         //获取切点和增强模式 切点key为 anno的名字value为增强集合
         for (Class clazz : aspectClasses) {
@@ -125,7 +125,7 @@ public class ContextBean {
                     MyPointcutAnno myAnnotation = method.getAnnotation(MyPointcutAnno.class);
                     String aspectAnno = myAnnotation.value().replace("@annotation(","").replace(")","");
                     pointcutMethodName = method.getName();
-                    aspectMap.put(aspectAnno, advisorList);
+                    aspectMap.put(aspectAnno, advisors);
                     annoMethodMap.put(pointcutMethodName, aspectAnno);
                 }
             }
@@ -137,9 +137,8 @@ public class ContextBean {
                     String value = myAnnotation.value();
                     if (value.replace("()","").equals(pointcutMethodName)) {
                         String aspectAnno = annoMethodMap.get(value.replace("()",""));
-                        List<Advisor> advisors = aspectMap.get(aspectAnno);
-                        advisors.add(new BeforeAdvisor(clazz.newInstance(), method));
-                        aspectMap.put(aspectAnno, advisorList);
+                        advisors.setBeforeAdvisor(new BeforeAdvisor(clazz.newInstance(), method));
+                        aspectMap.put(aspectAnno, advisors);
                     }
                 }
 
@@ -148,9 +147,8 @@ public class ContextBean {
                     String value = myAnnotation.value();
                     if (value.equals(pointcutMethodName+"()")) {
                         String aspectAnno = annoMethodMap.get(value.replace("()",""));
-                        List<Advisor> advisors = aspectMap.get(aspectAnno);
-                        advisors.add(new AfterAdvisor(clazz.newInstance(), method));
-                        aspectMap.put(aspectAnno, advisorList);
+                        advisors.setAfterAdvisor(new AfterAdvisor(clazz.newInstance(), method));
+                        aspectMap.put(aspectAnno, advisors);
                     }
                 }
 
@@ -160,9 +158,28 @@ public class ContextBean {
                     String value = myAnnotation.value();
                     if (value.equals(pointcutMethodName+"()")) {
                         String aspectAnno = annoMethodMap.get(value.replace("()",""));
-                        List<Advisor> advisors = aspectMap.get(aspectAnno);
-                        advisors.add(new AroundAdvisor(clazz.newInstance(), method));
-                        aspectMap.put(aspectAnno, advisorList);
+                        advisors.setAroundAdvisor(new AroundAdvisor(clazz.newInstance(), method));
+                        aspectMap.put(aspectAnno, advisors);
+                    }
+                }
+
+                if (method.isAnnotationPresent(MyAfterReturn.class)) {
+                    MyAfterReturn myAnnotation = method.getAnnotation(MyAfterReturn.class);
+                    String value = myAnnotation.value();
+                    if (value.equals(pointcutMethodName+"()")) {
+                        String aspectAnno = annoMethodMap.get(value.replace("()",""));
+                        advisors.setAfterReturnAdvisor(new AfterReturnAdvisor(clazz.newInstance(), method));
+                        aspectMap.put(aspectAnno, advisors);
+                    }
+                }
+
+                if (method.isAnnotationPresent(MyAfterThrowing.class)) {
+                    MyAfterThrowing myAnnotation = method.getAnnotation(MyAfterThrowing.class);
+                    String value = myAnnotation.value();
+                    if (value.equals(pointcutMethodName+"()")) {
+                        String aspectAnno = annoMethodMap.get(value.replace("()",""));
+                        advisors.setAfterThrowingAdvisor(new AfterThrowingAdvisor(clazz.newInstance(), method));
+                        aspectMap.put(aspectAnno, advisors);
                     }
                 }
             }

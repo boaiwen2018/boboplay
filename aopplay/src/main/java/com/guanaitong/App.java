@@ -1,7 +1,6 @@
 package com.guanaitong;
 
 import com.guanaitong.service.PlayService;
-import com.guanaitong.service.impl.PlayServiceImpl;
 import com.guanaitong.util.ContextBean;
 
 import java.util.Map;
