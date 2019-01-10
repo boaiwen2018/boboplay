@@ -1,7 +1,7 @@
-package com.guanaitong.springioc.service;
+package service;
 
-import com.guanaitong.springioc.dao.PlayDao;
-import com.guanaitong.springioc.dao.SleepDao;
+import dao.PlayDao;
+import dao.SleepDao;
 
 public class UserService {
 

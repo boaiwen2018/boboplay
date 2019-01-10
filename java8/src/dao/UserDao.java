@@ -1,6 +1,6 @@
-package com.guanaitong.java8.dao;
+package dao;
 
-import com.guanaitong.java8.model.User;
+import model.User;
 
 import java.util.Arrays;
 import java.util.List;

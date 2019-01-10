@@ -1,4 +1,4 @@
-package com.guanaitong.java8.custom.collector;
+package collector;
 
 
 import java.util.*;

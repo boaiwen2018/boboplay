@@ -1,4 +1,4 @@
-package com.guanaitong.springioc.context;
+package context;
 
 public class ContextUtils {
     /**

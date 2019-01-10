@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans>
+
+    <bean id="playDao" class="dao.PlayDao"/>
+
+    <bean id="sleepDao" class="dao.SleepDao"/>
+
+    <bean id="userService" class="service.UserService">
+        <property name="playDao" ref="playDao"/>
+        <property name="sleepDao" ref="sleepDao"/>
+    </bean>
+
+
+</beans>

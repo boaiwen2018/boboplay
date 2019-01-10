@@ -1,10 +1,7 @@
-package com.guanaitong.springioc;
-
-
-import com.guanaitong.springioc.context.ContextMap;
-import com.guanaitong.springioc.context.ContextUtils;
-import com.guanaitong.springioc.service.UserService;
-import com.guanaitong.springioc.util.FileUtil;
+import context.ContextMap;
+import context.ContextUtils;
+import service.UserService;
+import util.FileUtil;
 
 import java.util.HashMap;
 import java.util.Iterator;

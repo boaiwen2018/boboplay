@@ -1,4 +1,4 @@
-package com.guanaitong.springioc.util;
+package util;
 
 import java.beans.PropertyDescriptor;
 import java.io.File;

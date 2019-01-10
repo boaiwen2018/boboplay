@@ -1,11 +1,10 @@
-package com.guanaitong.java8.service;
+package service;
 
 
-import com.guanaitong.java8.custom.collector.MyCollectors;
-import com.guanaitong.java8.dao.UserDao;
-import com.guanaitong.java8.model.User;
+import collector.MyCollectors;
+import dao.UserDao;
+import model.User;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;

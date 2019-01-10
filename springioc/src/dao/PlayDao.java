@@ -1,4 +1,4 @@
-package com.guanaitong.springioc.dao;
+package dao;
 
 public class PlayDao {
 

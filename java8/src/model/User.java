@@ -1,4 +1,4 @@
-package com.guanaitong.java8.model;
+package model;
 
 
 import lombok.Data;

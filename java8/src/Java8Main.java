@@ -1,8 +1,4 @@
-package com.guanaitong.java8;
-
-import com.guanaitong.java8.model.User;
-import com.guanaitong.java8.service.UserService;
-import lombok.extern.slf4j.Slf4j;
+import service.UserService;
 
 import java.util.Iterator;
 import java.util.List;
